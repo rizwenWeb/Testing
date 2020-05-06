@@ -1,126 +1,61 @@
-/**
- * original code:
- * https://doctorcodetutorial.blogspot.com/2020/03/create-coronavirus-tracker-in.html
- */
+//Decalring the Different Variable and Objects
+let new_cases = document.getElementById("new_case");
+let new_death = document.getElementById("new_death");
+let total_death = document.getElementById("total_death");
+let total_recovered = document.getElementById("total_recovered");
+let total_cases = document.getElementById("total_cases");
+let table = document.getElementById('countries_stat')
+// Fetching the Data from the server
 
-const {render, html} = uhtml;
+//Fetching the World Data
+fetch("https://coronavirus-monitor.p.rapidapi.com/coronavirus/worldstat.php", {
+    "method": "GET",
+    "headers": {
+        "x-rapidapi-host": "coronavirus-monitor.p.rapidapi.com",
+        "x-rapidapi-key": "53009286a0mshdc8ec356f7aa205p1e0e80jsn5858f548ed53"
+    }
+})
+.then(response => response.json().then( data => {
+    console.log(data);
+    total_cases.innerHTML = data.total_cases;
+    new_cases.innerHTML = data.new_cases;
+    new_death.innerHTML = data.new_deaths;
+    total_death.innerHTML = data.total_deaths;
+    total_recovered.innerHTML = data.total_recovered;
 
-const API_BASE = 'https://coronavirus-monitor.p.rapidapi.com/coronavirus';
+})).catch(err => {
+    console.log(err);
+});
 
-// fetcher
-const json = res => res.json();
-const details = {
-  headers: {
-    'x-rapidapi-host': 'coronavirus-monitor.p.rapidapi.com',
-    // sign up in https://rapidapi.com/ to obtain yours
-	  'x-rapidapi-key': '32e514149emsh2463c22b995ef96p19431ajsnf68d9fe53b5c'
-  }
-};
-const grabJSON = (url, details) => fetch(url, details).then(json);
+//Fetching The Case by Country Data
+fetch("https://coronavirus-monitor.p.rapidapi.com/coronavirus/cases_by_country.php", {
+    "method": "GET",
+    "headers": {
+        "x-rapidapi-host": "coronavirus-monitor.p.rapidapi.com",
+        "x-rapidapi-key": "53009286a0mshdc8ec356f7aa205p1e0e80jsn5858f548ed53"
+    }
+})
+.then(response => response.json().then(data =>{
+    console.log(data)
+    let countries_stat = data.countries_stat;
+//Getting all the country statistic using a loop
+    for(let i = 0; i<countries_stat.length;i++){
+        console.log(countries_stat[i]);
+        //we will start by inserting the new rows inside our table
+        let row = table.insertRow(i+1);
+        let country_name = row.insertCell(0);
+        let cases = row.insertCell(1);
+        let deaths = row.insertCell(2);
+        let serious_critical = row.insertCell(3);
+        let recovered_per_country = row.insertCell(4);
+        country_name.innerHTML = countries_stat[i].country_name;
+        cases.innerHTML = countries_stat[i].cases;
+        deaths.innerHTML = countries_stat[i].deaths;
+        serious_critical.innerHTML = countries_stat[i].serious_critical;
+        recovered_per_country.innerHTML = countries_stat[i].total_recovered;
 
-// cache buster & data
-const grabData = () => [
-  grabJSON(`${API_BASE}/worldstat.php`, details),
-  grabJSON(`${API_BASE}/cases_by_country.php`, details)
-];
-
-// the API is showing badly counted numbers
-// make this an empty string once numbers are back
-const placeHolder = "";
-
-// box wrapper
-const boxWrapper = ({
-  total_deaths,
-  total_recovered,
-  new_cases,
-  new_deaths
-}) => html`
-  <div class="box_wrapper">
-    <div class="box">
-      <h2>Deaths</h2>
-      <p>${placeHolder || total_deaths}</p>
-    </div>
-    <div class="box">
-      <h2>Recovered</h2>
-      <p>${placeHolder || total_recovered}</p>
-    </div>
-    <div class="box">
-      <h2>New cases</h2>
-      <p>${placeHolder || new_cases}</p>
-    </div>
-    <div class="box">
-      <h2>New Deaths</h2>
-      <p>${placeHolder || new_deaths}</p>
-    </div>
-  </div> 
-`;
-
-// country details
-const sortKey = 'uhtml-covid-19-sort-name';
-let sortName = localStorage.getItem(sortKey) || 'cases';
-const sort = (event) => {
-  event.preventDefault();
-  const {currentTarget, target} = event;
-  const {name} = target.dataset;
-  if (!name) return;
-  sortName = name;
-  localStorage.setItem(sortKey, name);
-  visualize(currentTarget.stats);
-};
-
-const sortByName = (stats, name) => stats.sort((a, b) => (
-  parseInt(b[name].replace(/\D+/g, ''), 10) -
-  parseInt(a[name].replace(/\D+/g, ''), 10)
-));
-
-const countryTable = (world, {countries_stat}) => html`
-  <table>
-    <tr onclick=${sort} .stats=${[world, {countries_stat}]}>
-      <th>Country</th>
-      <th data-name="cases">Cases</th>
-      <th data-name="deaths">Deaths</th>
-      <th data-name="serious_critical">critical</th>
-      <th data-name="total_recovered">recovered</th>
-    </tr>
-    ${sortByName(countries_stat, sortName).map(({
-      country_name,
-      cases,
-      deaths,
-      serious_critical,
-      total_recovered
-    }) => html`
-      <tr>
-        <td>${country_name}</td>
-        <td>${cases}</td>
-        <td>${deaths}</td>
-        <td>${serious_critical}</td>
-        <td>${total_recovered}</td>
-      </tr>
-    `)}
-  </table>
-`;
-
-// body view
-const visualize = ([world, countries]) => {
-  render(document.body, html`
-    <div class="wrapper">
-      <div class="statistic">
-        <div class="total_case_box">
-          <h2>Total Cases</h2>
-          <p>${placeHolder || world.total_cases}</p>
-        </div>
-        ${boxWrapper(world)}
-        ${countryTable(world, countries)}
-      </div>
-    </div>
-  `);
-  // update in 10 minutes
-  setTimeout(update, 1000 * 60);
-};
-
-// updater
-const update = () => Promise.all(grabData())
-                            .then(visualize, console.error);
-
-// bootstrap
-addEventListener('DOMContentLoaded', update, {once: true});
+    }
+}))
+.catch(err => {
+    console.log(err);
+});
