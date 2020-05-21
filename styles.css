@@ -18,7 +18,7 @@ body{
 }
 
 .total_case_box{
-    
+
     background-color: #fafafa;
     box-shadow: 2px 2px 8px rgba(30,30,30,.2);
     margin: 10px 15px;
@@ -67,12 +67,12 @@ th{
     padding: 15px 0;
     border: none;
     border-spacing: 0;
-    
+
 }
 tr:nth-child(even){
     background-color: #fafafa;
-    
-    
+
+
 }
 tr:nth-child(odd){
     background-color: #424242;
@@ -80,6 +80,11 @@ tr:nth-child(odd){
 }
 tr td{
     padding: 15px 0;
-    
-    
+
+
+}
+.carousel-item{
+    height:100%;
+    padding:1% 10%;
+  background-color: #BD9A62;
 }
